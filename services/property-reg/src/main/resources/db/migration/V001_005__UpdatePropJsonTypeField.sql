@@ -1,0 +1,1 @@
+update properties set property_json_type = 0;

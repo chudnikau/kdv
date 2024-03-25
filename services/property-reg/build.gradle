@@ -1,0 +1,88 @@
+/*
+    https://projectlombok.org/setup/gradle
+ */
+
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '2.7.12'
+    id 'io.spring.dependency-management' version '1.0.15.RELEASE'
+}
+
+repositories {
+    mavenCentral()
+}
+
+ext {
+    set('springCloudVersion', "2021.0.7")
+}
+
+dependencies {
+    implementation project(':libraries:security')
+    implementation project(':libraries:access-roles-interceptor')
+    implementation project(':libraries:catalog-book-api')
+    implementation project(':libraries:property-reg-api')
+    implementation project(':libraries:storage')
+
+    compileOnly 'org.projectlombok:lombok:1.18.30'
+    annotationProcessor 'org.projectlombok:lombok:1.18.30'
+
+    implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
+    implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
+    implementation 'io.github.openfeign:feign-jackson:12.4'
+
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+    implementation 'org.flywaydb:flyway-core:8.5.13'
+    implementation 'org.postgresql:postgresql:42.6.0'
+    implementation 'com.sun.jersey.contribs:jersey-apache-client4:1.19.4'
+
+    testImplementation project(':libraries:access-roles-interceptor')
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
+}
+
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+    }
+}
+
+test {
+    useJUnitPlatform()
+    /* Override default dbname if required */
+    systemProperty 'dbname', findProperty('dbname') ?: System.getenv('DB_NAME') ?: 'devpropertyregdb'
+}
+
+tasks.named("jar") {
+    enabled = false
+}
+
+bootJar {
+    archivesBaseName = 'property-reg-service'
+}
+
+if (project.hasProperty('branch.release')) {
+    bootJar {
+        manifest {
+            attributes(
+                    'Branch-Release': project.property('branch.release')
+            )
+        }
+    }
+}
+
+/* Print passed command line arguments
+*  Example of using: gradle printCmdArgs --project-prop branch.release=true clean build
+* */
+tasks.register('printCmdArgs') {
+    doLast {
+        if (project.hasProperty('branch.release')) {
+            println "Command line argument branch.release=" + project.property('branch.release')
+        }
+    }
+}

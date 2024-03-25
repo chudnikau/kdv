@@ -1,0 +1,1 @@
+alter table properties drop constraint if exists "properties_ref_property_type_id_ref_property_category_id_key";
